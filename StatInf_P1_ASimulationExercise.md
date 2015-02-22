@@ -1,96 +1,117 @@
-# A Simulation Exercise with the Exponential Distribution
+# An Exercise in the Central Limit Theorem
 Tim Wise  
 February 21, 2015  
 
 ### Overview
 
+This is an exercise in the Central Limit Theorem (CLT) where we investigate the distribution of the average of exponential numbers. 
+
+For our purposes, the important points of the CLT are as follows [...]: 
+
+- Consider a population of random numbers from any distribution with mean $\mu$ and variance $\sigma^2$  
+- The average of $n$ random draws from this population is itself a random variable. This variable is commonly symbolized as $\bar X_n$  
+- The mean of that random variable is the population mean, that is $E[\bar X_n] = \mu$  
+- The variance of that random variable is $Var(\bar X_n) = \sigma^2/n$
+- The distribution of $\bar X_n$ is approximately standard normal, $N(\mu,\sigma^2/n)$
+
+In this exercise:  
+
+- We start with a population of random numbers from the exponential distribution
+- Our $\bar X_n$, which we will call $Z$, is going to be the average of 40 random exponential numbers
+- We generate 1000 values for $Z$ 
+- We look at the distribution of $Z$, its sample mean and variance
+- We compare those to the theoretical values given to us by the CLT
+- We show that $Z$ is normally distributed
+
 ### Simulations
 
-For this analysis, we generate numbers from the exponential distribution.
+In this section, we create a random variable, $Z$, whose value is the average of 40 numbers drawn from an exponential distribution. We generate 1000 values for $Z$. It is the distribution of these values that we are interested in.
 
 ####  The exponential distribution
 
-The exponential distribution can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. For this analysis, we set lambda = 0.2. The shape of the exponential distribution for lambda = 0.2 is shown below:
+The exponential distribution is simulated in R with *rexp(n, lambda)* function where $n$ is the number of exponentials to generate and $lambda$ is the rate parameter (e.g., 35 web hits per minute). The mean and standard deviation of the exponential distribution are both $1/lambda$. 
 
-```r
-hist(rexp(n=1000, rate=0.2))
-```
-
-![](StatInf_P1_ASimulationExercise_files/figure-html/unnamed-chunk-1-1.png) 
-
-The mean and variance of the exponential distribution are both 1 / lambda:
+For this analysis, we'll use $lambda = 0.2$. Let's set $lambda$ and compute the mean, $mu$, and the standard deviation, $sigma$:
 
 ```r
 lambda <- 0.2
 mu <- 1 / lambda
 sigma <- 1 / lambda
-c(mu, sigma)
+c(lambda, mu, sigma)
 ```
 
 ```
-## [1] 5 5
+## [1] 0.2 5.0 5.0
 ```
 
-#### Generate 1000 sets each with 40 exponentials
-
-Now we generate 1000 sets of 40 random exponential numbers. We store those sets in a matrix, M, with 1000 rows, one for each set, and 40 columns, one for each member of the set:
+Just for grins, let's look at the shape of an exponential distribution with a mean of 5:
 
 ```r
-nsets <- 1000
-nsamples <- 40
-M <- matrix(data = rexp(n = nsets * nsamples, 
-                        rate = lambda),
-            nrow = nsets,
-            ncol = nsamples)
-str(M)
+hist(rexp(n=1000, rate=1/5))
 ```
 
-```
-##  num [1:1000, 1:40] 4.397 2.955 4.511 3.515 0.616 ...
-```
+![](StatInf_P1_ASimulationExercise_files/figure-html/unnamed-chunk-2-1.png) 
 
-### Sample Means vs Theoretical Mean
+We see it's a highly skewed distribution, with most of the weight below the mean and a long tail extending above the mean. It looks most un-normal.
 
-We have learned in this class that:  
-- the average of a random sample is itself a random variable, and  
-- the distribution of that random variable is centered around the population mean, mu.
+#### Random variable Z, the average of 40 exponential numbers 
 
-Let's see if we can show that for the exponential distribution. 
-
-First, let's create a new random variable, Z, whose values are the average of a set of 40 exponentials. With the values in M, we can compute 1000 values for Z by taking the average of each row in M:
+Now, we generate the average of 40 random exponential numbers 1000 times. We store those values in a vector $Z$, which is our random variable of interest:
 
 ```r
-summarize.rows <- 1
-Z <- apply (M, summarize.rows, mean)
+set.seed(123456789)
+n <- 40
+Z <- NULL
+for (i in 1:1000) { Z <- c(Z, mean(rexp(n, lambda))) }
 str(Z)
 ```
 
 ```
-##  num [1:1000] 5.07 4.77 4.2 5.96 4.07 ...
+##  num [1:1000] 4.43 4.4 4.6 3.25 3.95 ...
 ```
-Now, let's compare the sample mean of Z with mu, the theoretical mean of our exponential distribution:
+
+### Sample Mean vs Theoretical Mean
+
+The CLT states **the distribution of averages** of independent identically distributed (iid) variables **is normally distributed around the population mean**[...].
+
+For our example, that implies the values of Z should be distributed around the mean of our exponential distribution, $mu=5$. Let's see if that's true. 
+
+First, let's visualize $Z$, looking at the distribution of values: 
+
+```r
+hist(Z)
+```
+
+![](StatInf_P1_ASimulationExercise_files/figure-html/unnamed-chunk-4-1.png) 
+
+The distribution of $Z$, shown in the histogram above, looks centered around $5$.
+
+The CLT says that the theorectical mean of Z is $mu$.. So, let's compute the sample mean of Z and compare with mu:
 
 ```r
 round(c(mu, mean(Z)), 2)
 ```
 
 ```
-## [1] 5 5
+## [1] 5.00 5.01
 ```
 We can see that the two compare very closely.
 
-Let's visualize Z, looking at the distribution of values: 
+### Sample Variance versus Theoretical Variance 
+
+The CLT implies the variance of $Z$ is $\sigma^2/n$
+
+Let's compare the theoretical variance of Z to the sample variance:
+
 
 ```r
-hist(Z)
+round(c(sigma^2/n, var(Z)), 2)
 ```
 
-![](StatInf_P1_ASimulationExercise_files/figure-html/unnamed-chunk-6-1.png) 
+```
+## [1] 0.62 0.60
+```
+These two compare closly also.
 
-The distribution of Z, the sample means, is centered around 5, which is the theoretical mean of our exponential distribution.
-
-And the distribution of Z looks Guassian (normal) and quite a bit different from the exponential distribution we started with.
-
-### Sample Variance versus Theoretical Variance
-
+### Distribution of Z is normal
 
