@@ -1,7 +1,7 @@
 ---
 title: An Exercise in the Central Limit Theorem
 author: Tim Wise
-date: February 21, 2015
+date: May 2015
 output:
   pdf_document:
   html_document:
@@ -11,28 +11,40 @@ output:
 
 ### Overview
 
-This is an exercise in the Central Limit Theorem (CLT) where we investigate the distribution of the average of exponential numbers. 
+This is an exercise in the Central Limit Theorem (CLT) where we investigate the distribution of the average of exponential numbers and compare:  
+
+- The sample mean to the theoretical mean
+- The sample variance to the theoretical variance, and
+- The sample distribution to the normal distribution
+
+This exercise was a project for the Coursea class _Introduction to Statistical Inference_ which is part the _Data Science Specialization_ from Johns Hopkins University.
+
+#### Note to graders: 
+
+Since this was an exercise and a demonstration, rather than a formal paper or executive report, I chose to write this report in a narrative style interweaving discussion, code, and results. I think it is a good style for this exercise and let me practice the skills learned in the Reproducible Research class. The report is less than 6 pages, as per the rubric, but the code and details are not separated into an appendix. Grade it how you wish. Thanks.
+
+### Process
 
 For our purposes, the important points of the CLT, as summarized from the class notes, are as follows: 
 
-- Consider a population of random numbers from any distribution with mean $\mu$ and variance $\sigma^2$
-- The average of $n$ random draws from this population is itself a random variable. This variable is commonly symbolized as $\bar X_n$
-- The mean of that random variable is the population mean, that is $E[\bar X_n] = \mu$
-- The variance of that random variable is $Var(\bar X_n) = \sigma^2/n$
-- The distribution of $\bar X_n$ is approximately standard normal, $N(\mu,\sigma^2/n)$
+- Consider a population of random numbers from any distribution with mean $\mu$ and variance $\sigma^2$.
+- The average of $n$ random draws from this population is itself a random variable. This variable is commonly symbolized as $\bar X_n$.
+- The mean of that random variable is the population mean, that is $E[\bar X_n] = \mu$.
+- The variance of that random variable is $Var(\bar X_n) = \sigma^2/n$.
+- The distribution of $\bar X_n$ is approximately standard normal, $N(\mu,\sigma^2/n)$.
 
-In this exercise:  
+In this exercise, we demonstrate those points of the CLT by doing the following: 
 
-- We start with a population of random numbers from the exponential distribution
+- We start with a population of random numbers from the exponential distribution.
 - We create a new random variable that is the average of 40 random exponential numbers. In CLT terms, this random variable would be named  $\bar X_{40}$, but we will just call it $Z$.
-- We generate 1000 values for $Z$ 
-- We look at the distribution of $Z$, its sample mean and variance
-- We compare those to the theoretical values given to us by the CLT
-- We show that $Z$ is normally distributed
+- We generate 1000 values for $Z$. 
+- We look at the distribution of $Z$ and compute its sample mean and variance.
+- We compare the sample mean and variance to the theoretical values given to us by the CLT.
+- We show that $Z$ is normally distributed.
 
 ### Simulations
 
-In this section, we create a random variable, $Z$, whose value is the average of 40 numbers drawn from an exponential distribution. We generate 1000 values for $Z$. It is the distribution of these values that we are interested in.
+First, let's create a random variable, $Z$, whose value is the average of 40 numbers drawn from an exponential distribution. We generate 1000 values for $Z$. It is the distribution of these values that we are interested in.
 
 ####  The exponential distribution
 
@@ -48,7 +60,7 @@ c(lambda, mu, sigma)
 
 Just for grins, let's look at the shape of an exponential distribution with a mean of 5:
 ```{r}
-hist(rexp(n=1000, rate=1/5))
+hist(rexp(n=1000, rate=1/5), main="Shape of an Exponential Distribution")
 ```
 
 We see it's a highly skewed distribution, with a concentration of the values between 0 and the mean and a long tail extending above the mean. It looks most un-normal.
@@ -61,57 +73,88 @@ Now, we generate the average of 40 random exponential numbers 1000 times. We sto
 set.seed(123456789)
 n <- 40
 Z <- NULL
-for (i in 1:1000) { Z <- c(Z, mean(rexp(n, lambda))) }
+for (i in 1:1000) { 
+  Z <- c(Z, mean(rexp(n, lambda))) 
+}
 str(Z)
 ```
 
 ### Sample Mean versus Theoretical Mean
 
-The CLT states **the distribution of averages** of independent identically distributed (iid) variables **is normally distributed around the population mean**.
+The CLT states **the distribution of the average** of independent identically distributed (iid) variables **is normally distributed around the population mean**.
 
-For our example, that implies the values of Z should be distributed around the mean of our exponential distribution, $mu=`r mu`$. Let's see if that's true. 
+For our example, that implies the values of Z should be distributed around the mean of our exponential distribution, which is $mu=`r mu`$. Let's see if that's true. 
 
 First, let's visualize $Z$, looking at the distribution of values: 
 ```{r}
 hist(Z)
 ```
 
-The distribution of $Z$, shown in the histogram above, looks centered around $`r mu`$.
+The distribution of $Z$, shown in the histogram above, certainly looks centered around $`r mu`$.
 
-The CLT says that the theoretical mean of $Z$ is $mu$. So, let's compute the sample mean of Z and compare with mu:
+Now let's compute the sample mean of Z and compare with $mu$:
 ```{r}
-round(c(mu, mean(Z)), 2)
+theoretical_mean <- mu
+sample_mean      <- mean(Z)
+
+round(c(theoretical_mean, sample_mean), 2)
 ```
-We can see that the two compare very closely.
+We can see that the two compare very closely, supporting the CLT claim.
 
 ### Sample Variance versus Theoretical Variance 
 
-The CLT says the theoretical variance of $Z$ is $\sigma^2/n$.
+The CLT says the theoretical variance of $Z$ is $\sigma^2/n$, where $sigma$ is the standard deviation of our exponential distribution and $n$ is the number of exponential numbers we draw for each set.
 
 Let's compare the theoretical variance of Z to the sample variance:
 
 ```{r}
-round(c(sigma^2/n, var(Z)), 2)
+theoretical_variance <- sigma^2/n
+sample_variance      <- var(Z)
+
+round(c(theoretical_variance, sample_variance), 2)
 ```
-These two compare closely also.
+These two compare closely also, supporting the CLT claim.
 
 ### Distribution of Z compared to Standard Normal
 
-Finally, the CLT states that, properly normalized, the distribution of $Z$ is standard normal. A standard normal distribution has a mean and median of 0 and a standard deviation of 1.
+Finally, the CLT states that, properly normalized, the distribution of $Z$ is standard normal. A **standard normal distribution** has a mean and median of 0 and a standard deviation of 1. Let's standardize Z and see if it compares favorably to the standard normal measures.
 
 We normalize the values of $Z$ by subtracting $mu$, the theoretical mean of $Z$, and dividing by the theoretical standard deviation of $Z$ (the square root of the variance of $Z$):
 
 $$\frac{Z - \mu}{\sigma / \sqrt{n}}$$
 
-Let's plot the distribution of normalized $Z$ values:
+Let's normalize the $Z$ values and plot their distribution:
 ````{r}
 normalizedZ <- (Z - mu)/(sigma / sqrt(n))
 hist(normalizedZ)
 ````
 
-Computing the mean, median, and standard deviation of the normalized $Z$ values, we see they are comparable to those of the standard normal distribution: mean = 0, median = 0, standard deviation = 1:
+The values certainly look normally distributed, centered around 0.
+
+Now, let's compute the mean, median, and standard deviation of the normalized $Z$ values and compare them to the standard normal measures. Again, the standard normal distribution has these measures:
+````{r}
+standard_mean   <- 0
+standard_median <- 0
+standard_dev    <- 1
+
+round(c(standard_mean, standard_median, standard_dev), 4)
+````
+Computing the measures for our normalized $Z$ values:
 ```{r}
-round(c(mean(normalizedZ), median(normalizedZ), sd(normalizedZ)), 4)
+normalizedZ_mean   <- mean(normalizedZ)
+normalizedZ_median <- median(normalizedZ)
+normalizedZ_dev    <- sd(normalizedZ)
+
+round(c(normalizedZ_mean, normalizedZ_median, normalizedZ_dev), 4)
 ```
+We see the mean and deviation of the normalized $Z$ are comparable (<2 %) to those of the standard normal distribution, however, the sample median is suspicious, off by almost 6%. So we conclude that $Z$ is _approximately_ normally distributed.
+
+### Summary
+
+In this exercise, we did a simulation to demonstrate the principles of the Central Limit Theorem. For a sample distribution of the average of 40 exponential numbers, we showed that:  
+
+- The sample mean was comparable to the theoretical mean
+- The sample variance was comparable to the theoretical variance, and
+- The sample values are approximately normally distributed
 
 
