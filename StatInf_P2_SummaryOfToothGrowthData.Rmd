@@ -1,0 +1,97 @@
+---
+title: A Summary of the Tooth Growth Dataset
+author: Tim Wise
+date: May 2015
+output:
+  pdf_document:
+  html_document:
+    keep_md: true
+
+---
+
+###  Overview and Summary
+
+The ToothGrowth data set measures the growth of teeth in guinea pigs in response to being given varying doses of Vitamin C via two delivery methods, orange juice or ascorbic acid.
+
+We found that ....
+
+### The Details
+
+####  Exploratory Analysis
+
+The ToothGrowth dataset is a standard data set in R. Let's load the data set:
+```{r}
+require("datasets")
+str(ToothGrowth)
+```
+
+And look at the documentation for more information on the columns:
+```{r}
+?ToothGrowth
+```
+The description of the data set (excerpted from the documentation):
+```
+The response is the length of odontoblasts (teeth) in each of 10 guinea pigs at 
+each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery 
+methods (orange juice or ascorbic acid).
+
+A data frame with 60 observations on 3 variables:
+    
+    [,1]  len   numeric	 Tooth length
+    [,2]  supp  factor	 Supplement type (VC or OJ)
+    [,3]  dose  numeric	 Dose in milligrams
+```
+Note we don't know the units for tooth length.
+
+Tooth length is the dependent variable. Let's look at how many samples we have for the independent variables, supplement type and dosage:
+```{r}
+table(ToothGrowth$supp, ToothGrowth$dose)
+```
+
+We see there are 10 samples for each dosage of each supplement, 20 samples for each dosage, and 30 samples for each supplement type. 10 is a small number of samples. Let's keep that in mind in later analysis.
+
+Two obvious questions come to mind: 
+
+1. Does the supplement type have an impact on tooth growth?
+1. Does the dosage have an impact on tooth growth?
+
+We could analyze those questions for each _supplement type, dosage_ pair, or we analyize a single variable at an aggregate level, say compairing supplement type and ignoring dosage levels.
+
+For the first question, we will look at just the supplement type and ignore the dosage level. Let's look at a boxplot of tooth growth for each supplement type:
+
+```{r}
+plot(x=ToothGrowth$supp, 
+     y=ToothGrowth$len,
+     main='Tooth growth by supplement type',
+     xlab='Supplement type',
+     ylab='Tooth length')
+```
+
+It appears that teeth growth more when the guinea pigs are given orange juice as opposed to ascorbic acid. Is this difference meaning full? This is something we will test in a moment. 
+
+For the second question, let's look at a scatterplot for each doesage level and supplement type:
+```{r}
+plot(x=ToothGrowth$dose, 
+     y=ToothGrowth$len,
+     col=c('red','blue')[ToothGrowth$supp],
+     pch=19,
+     main='Tooth growth by dosage',
+     xlab='Supplement type',
+     ylab='Tooth length')
+
+legend('bottomright',
+       legend=levels(ToothGrowth$supp),
+       pch=19,
+       col=c('red','blue'),
+       text.col = 'black')
+```
+
+#### Does supplement type have an impact on tooth growth?
+
+We have see that the supplement type appears to have an impact on tooth growth so let's do a formal test to see if we can make that claim.
+
+We will do a t-test comparing the supplements across all dosage levels
+
+#### Does dosage have an impact on tooth growth?
+
+
