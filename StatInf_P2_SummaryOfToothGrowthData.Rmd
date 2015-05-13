@@ -1,5 +1,5 @@
 ---
-title: A Summary of the Tooth Growth Dataset
+title: A Summary of the Tooth Growth Data Set
 author: Tim Wise
 date: May 2015
 output:
@@ -13,23 +13,35 @@ output:
 
 The ToothGrowth data set measures the growth of teeth in guinea pigs in response to being given varying doses of Vitamin C via two delivery methods, orange juice or ascorbic acid.
 
-We found that ....
+This analysis provides an answer to these questions: 
+
+1. Does the supplement type have an impact on tooth growth?
+1. Does the dosage have an impact on tooth growth?
+
+We found that:
+
+- For a 2.0mg dosage, there was no significant difference in tooth growth for the guinea pigs given orange juice verses those given ascorbic acid.
+
+- For dosages lower than 2.0mg, guinea pigs given orange juice had longer teeth on average (18.0mm) than those given ascorbic acid (12.4mm).
+
+- Guinea pigs given 1.0mg doses had longer teeth on average (19.8mm) than those given 0.5mg doses (10.6mm).
+
+The details of the analysis is described in the following sections.
 
 ### The Details
 
 ####  Exploratory Analysis
 
-The ToothGrowth dataset is a standard data set in R. Let's load the data set:
-```{r}
+The ToothGrowth data set is a standard data set in R. Let's load the data set:
+```{r message=FALSE}
 require("datasets")
 str(ToothGrowth)
 ```
 
-And look at the documentation for more information on the columns:
-```{r}
+And look at an excerpt of the documentation for more information on the columns:
+```{r message=FALSE}
 ?ToothGrowth
 ```
-The description of the data set (excerpted from the documentation):
 ```
 The response is the length of odontoblasts (teeth) in each of 10 guinea pigs at 
 each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery 
@@ -41,7 +53,10 @@ A data frame with 60 observations on 3 variables:
     [,2]  supp  factor	 Supplement type (VC or OJ)
     [,3]  dose  numeric	 Dose in milligrams
 ```
-Note we don't know the units for tooth length.
+Note: 
+
+- We don't know the units for tooth length. We will assume these measurements are millimeters (mm).
+- For supplement type, OJ is the encoded value for orange juice and VC is the encoded value for ascorbic acid.
 
 Tooth length is the dependent variable. Let's look at how many samples we have for the independent variables, supplement type and dosage:
 ```{r}
@@ -50,48 +65,95 @@ table(ToothGrowth$supp, ToothGrowth$dose)
 
 We see there are 10 samples for each dosage of each supplement, 20 samples for each dosage, and 30 samples for each supplement type. 10 is a small number of samples. Let's keep that in mind in later analysis.
 
-Two obvious questions come to mind: 
+We can do our analysis for each _supplement type, dosage_ pair, or we analyze a single variable at an aggregate level, ignoring the other variable. For example, comparing supplement type and ignoring dosage levels. Again, let's keep this in mind.
 
-1. Does the supplement type have an impact on tooth growth?
-1. Does the dosage have an impact on tooth growth?
-
-We could analyze those questions for each _supplement type, dosage_ pair, or we analyize a single variable at an aggregate level, say compairing supplement type and ignoring dosage levels.
-
-For the first question, we will look at just the supplement type and ignore the dosage level. Let's look at a boxplot of tooth growth for each supplement type:
-
-```{r}
-plot(x=ToothGrowth$supp, 
-     y=ToothGrowth$len,
-     main='Tooth growth by supplement type',
-     xlab='Supplement type',
-     ylab='Tooth length')
+Let's look at a box plot of tooth length broken down by supplement type and dosage:
+```{r message=FALSE}
+require(ggplot2)
+ggplot(ToothGrowth, aes(x=factor(dose), y=len, fill=supp)) + 
+  geom_boxplot() +
+  ggtitle('Tooth Length by Supplement Type and Dosage') +
+  xlab('Dosage (mgs)') +
+  ylab('Tooth Length (mm)') +
+  guides(fill=guide_legend(title='Supplement Type'))
 ```
 
-It appears that teeth growth more when the guinea pigs are given orange juice as opposed to ascorbic acid. Is this difference meaning full? This is something we will test in a moment. 
+From this plot, we see:
 
-For the second question, let's look at a scatterplot for each doesage level and supplement type:
-```{r}
-plot(x=ToothGrowth$dose, 
-     y=ToothGrowth$len,
-     col=c('red','blue')[ToothGrowth$supp],
-     pch=19,
-     main='Tooth growth by dosage',
-     xlab='Supplement type',
-     ylab='Tooth length')
+1. For 2.0 mg dosage, there appears to be no difference between OJ and VC. 
+1. For 1.0 mg dosage, OJ definitely appears to promote higher tooth growth that VC
+1. For 0.5 mg dosage, OJ appears to promote higher tooth growth than VC.
+1. For OJ and VC, a dosage of 1.0 mg promotes higher tooth growth than a dosage of 0.5 mg.
 
-legend('bottomright',
-       legend=levels(ToothGrowth$supp),
-       pch=19,
-       col=c('red','blue'),
-       text.col = 'black')
-```
+####  Exclude the 2.0 dosage samples
+
+I know this is a somewhat arbitrary decision, but:
+
+- I'd prefer not to do the analysis for each _dosage, supplement_ combination with only 10 samples.
+- I'd prefer to test across each variable with 20 samples. 
+- We can see that for the 2.0 dosage, there is no difference between OJ and VC.
+- Including the 2.0 dosage samples could very well impact the analysis of which supplement type is more effective across dosage levels.
+
+Based on those reasons, I'm going exclude the 2.0 mg dosage data from the rest of the analysis:
+```{r message=FALSE}
+require(dplyr)
+myToothData <- ToothGrowth %>% filter(dose != 2)
+table(ToothGrowth$supp, ToothGrowth$dose)
+````
+
+####  Assumptions
+
+For this analysis, we're going to do a Welch's t-test. We make the following assumptions (from the wikipedia entry for [Welch's t test](http://en.wikipedia.org/wiki/Welch%27s_t_test)):  
+
+1. The distribution of the populations being compared are normally distributed. We could formally test this, but for this exercise we're just going to assume.
+1. The variance of the two populations do not have to be the same. This is an advantage of using the Welch's test.
+2. The two samples sets should be independent, meaning random guinea pigs should have been selected for each supplement dosage. There's no way for us to test this, so again we will assume.
+
 
 #### Does supplement type have an impact on tooth growth?
 
-We have see that the supplement type appears to have an impact on tooth growth so let's do a formal test to see if we can make that claim.
+We have seen that the supplement type appears to have an impact on tooth growth, now let's do a formal test to see if we can legitimately make that claim.
 
-We will do a t-test comparing the supplements across all dosage levels
+We will compare the mean tooth length for each of the two supplement types, OJ and VC, across all dosage levels. 
+
+For this test: 
+
+- The null hypothesis is that the mean of the OJ population is the same as the mean of the VC population. 
+- The alternative hypothesis is that the two means are different
+
+Let's do the test (note we're saying the two sets are not paired and that the variances are not equal):
+```{r message=FALSE}
+t.test(len ~ supp, paired=FALSE, var.equal=FALSE, data=myToothData)
+```
+The output of the test states that: 
+
+- There is 95% confidence that interval (1.875234 9.304766) contains _the difference of the two means_. This interval does not include 0. An interval that includes 0 would indicate that there is no difference in the sample means.
+- The p-value = 0.004239 says there is a 0.4% chance that the two means are the same.
+- The mean len of the OJ set is 17.965 and is greater than the mean len of the VC set 12.375.
+
+So, since the 95% confidence interval does not contain 0 and the p-value is less that 5%, we reject the null hypothesis and conclude that: 
+
+- Giving guinea pigs orange juice had a greater impact on tooth growth than giving them ascorbic acid.
 
 #### Does dosage have an impact on tooth growth?
+
+Now let's test two dosage levels. For this test: 
+
+- The null hypothesis is that the mean of the 0.5 dosage population is the same as the mean of the 1.0 dosage population. 
+- The alternative hypothesis is that the two means are different
+
+```{r message=FALSE}
+t.test(len ~ dose, paired=FALSE, var.equal=FALSE, data = myToothData)
+```
+The output of the test states that: 
+
+- There is 95% confidence that interval (-11.983781  -6.276219) contains the _the difference of the two means_. This interval does not include 0. An interval that includes 0 would indicate that there is no difference in the sample means.
+- The p-value = 1.268e-07 says there is a chance much, much less that 1% that the two means are the same.
+- The mean len of the 1.0 dosage set is 19.735 which is greater than the mean len of the 0.5 set 10.605
+
+So, since the 95% confidence interval does not contain 0 and the p-value is less that 5%, we reject the null hypothesis and conclude that: 
+
+- Giving guinea pigs a dosage of 1.0mg of either supplement had a greater impact on tooth growth that given them 0.5 mg.
+
 
 
