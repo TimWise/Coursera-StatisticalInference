@@ -1,12 +1,11 @@
 ---
-title: A Summary of the Tooth Growth Data Set
-author: Tim Wise
-date: May 2015
+title: "A Summary of the Tooth Growth Data Set"
+author: "Tim Wise"
+date: "May 2015"
 output:
-  pdf_document:
   html_document:
-    keep_md: true
-
+    keep_md: yes
+  pdf_document: null
 ---
 
 ###  Overview and Summary
