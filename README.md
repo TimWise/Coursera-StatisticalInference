@@ -1,6 +1,6 @@
 ### Published Reports
 
-- [An Exercise in the Central Limit Theorem]("http://rpubs.com/timwise/161361")
+- [An Exercise in the Central Limit Theorem](http://rpubs.com/timwise/161361)
 - [A Summary of the Tooth Growth Data Set](http://rpubs.com/timwise/178927)
 
 ### Project 1: A Simulation Exercise
